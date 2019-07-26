@@ -45,7 +45,6 @@ variable "cloud_functions" {
       "description" : "Training Function",
       "runtime" : "go111",
       "memory" : "128",
-      "entry_point" : "Train",
       "service_account_email" : "cloud-function@wheelbarrow-dev.iam.gserviceaccount.com"
     }
   ]

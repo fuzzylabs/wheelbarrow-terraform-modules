@@ -7,6 +7,14 @@ terraform {
   backend "gcs" {}
 }
 
+data "terraform_remote_state" "cloud_storage" {
+  backend = "gcs"
+  config = {
+    bucket   = "${var.billing_org_id}_${var.customer}_${var.project_group}_${var.env}_terraform-state"
+    prefix   = "${var.location}/data_stores/cloud_storage"
+  }
+}
+
 data "archive_file" "default" {
   count       = "${length(var.cloud_functions)}"
   type        = "zip"
@@ -36,6 +44,12 @@ resource "google_cloudfunctions_function" "default" {
   source_archive_object = "${lookup(var.cloud_functions[count.index], "name")}.zip"
   trigger_http          = true
   timeout               = 60
-  entry_point           = "${lookup(var.cloud_functions[count.index], "entry_point")}"
+  entry_point           = "EntryPoint"
   service_account_email = "${lookup(var.cloud_functions[count.index], "service_account_email")}"
+
+  environment_variables = {
+    PROJECT = var.project
+    REGION = var.location
+    BUCKET = data.terraform_remote_state.cloud_storage.outputs.ml-resources-name
+  }
 }
